@@ -1,1 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>🧳 Packing Checklist</h1>
+      <p>{{ trip.name }} · Stay organized</p>
+    </div>
+    {% set total = namespace(packed=0,all=0) %}
+    {% for cat, items in categories.items() %}{% for item in items %}{% set total.all = total.all + 1 %}{% if item.is_packed %}{% set total.packed = total.packed + 1 %}{% endif %}{% endfor %}{% endfor %}
+    <span class="badge badge-{{ 'success' if total.packed == total.all and total.all > 0 else 'primary' }}">{{ total.packed }}/{{ total.all }} packed</span>
+  </div>
 
+  <div class="grid-2" style="align-items:start;gap:2rem">
+    <!-- Add item form -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">➕ Add Item</div></div>
+      <div class="card-body">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="form-group">
+            <label class="form-label">Item Name</label>
+            {{ form.name(class="form-control", placeholder="e.g. Passport", id="packing-item-name") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            {{ form.category(class="form-control", id="packing-item-cat") }}
+          </div>
+          {{ form.submit(class="btn btn-primary", id="packing-submit") }}
+        </form>
+      </div>
+    </div>
+
+    <!-- Checklist -->
+    <div>
+      {% set cat_icons = {'clothing':'👕','documents':'📄','electronics':'💻','toiletries':'🧴','general':'📦'} %}
+      {% if categories %}
+        {% for cat, items in categories.items() %}
+        <div class="section-title">{{ cat_icons.get(cat,'📦') }} {{ cat|title }} <span>{{ items|selectattr('is_packed')|list|length }}/{{ items|length }}</span></div>
+        {% for item in items %}
+        <div class="packing-item {{ 'packed' if item.is_packed }}">
+          <form method="POST" action="{{ url_for('trips.toggle_packed', trip_id=trip.id, item_id=item.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-icon btn-sm {{ 'btn-success' if item.is_packed else 'btn-secondary' }}">
+              {{ '✓' if item.is_packed else '○' }}
+            </button>
+          </form>
+          <span class="packing-name">{{ item.name }}</span>
+          <span class="packing-cat">{{ cat }}</span>
+          <form method="POST" action="{{ url_for('trips.delete_packing_item', trip_id=trip.id, item_id=item.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger btn-icon btn-sm">✕</button>
+          </form>
+        </div>
+        {% endfor %}
+        <br>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding:2rem">
+          <div class="empty-icon">🧳</div>
+          <h3>Checklist is empty</h3>
+          <p>Add items using the form.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
