@@ -1,1 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>{{ trip.name }}</h1>
+      <p>
+        {% if trip.start_date %}📅 {{ trip.start_date.strftime('%B %d') }}{% if trip.end_date %} – {{ trip.end_date.strftime('%B %d, %Y') }}{% endif %} · {{ trip.duration_days }} days{% endif %}
+        · {{ stops|length }} stop{{ 's' if stops|length != 1 }}
+      </p>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <a href="{{ url_for('trips.builder', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">✏️ Edit</a>
+      <a href="{{ url_for('trips.budget', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">💰 Budget</a>
+      <form method="POST" action="{{ url_for('trips.toggle_public', trip_id=trip.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-secondary btn-sm">{{ '🔒 Make Private' if trip.is_public else '🔓 Make Public' }}</button>
+      </form>
+      {% if trip.is_public and trip.share_token %}
+      <a href="{{ url_for('trips.share', token=trip.share_token) }}" class="btn btn-success btn-sm" target="_blank">🔗 Share</a>
+      {% endif %}
+    </div>
+  </div>
 
+  {% if trip.description %}
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-body">
+      <p style="color:var(--text-muted)">{{ trip.description }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if stops %}
+  <div class="timeline">
+    {% for stop in stops %}
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="card">
+        <div class="stop-header">
+          <div>
+            <div class="stop-city">📍 {{ stop.city.name }}, {{ stop.city.country }}</div>
+            <div class="stop-dates">
+              {% if stop.arrival_date %}{{ stop.arrival_date.strftime('%B %d') }}{% endif %}
+              {% if stop.departure_date %} – {{ stop.departure_date.strftime('%B %d, %Y') }}{% endif %}
+              · {{ stop.duration_days }} day{{ 's' if stop.duration_days != 1 }}
+            </div>
+          </div>
+          <span class="badge badge-primary">Stop {{ loop.index }}</span>
+        </div>
+        <div class="stop-body">
+          {% if stop.stop_activities %}
+            {% set icons = {'sightseeing':'🏛️','food':'🍜','adventure':'🧗','culture':'🎭','shopping':'🛍️','nature':'🌿','nightlife':'🎵'} %}
+            {% for sa in stop.stop_activities %}
+            <div class="activity-item">
+              <div class="activity-icon">{{ icons.get(sa.activity.category, '⭐') }}</div>
+              <div class="activity-info">
+                <div class="activity-name">{{ sa.activity.name }}</div>
+                <div class="activity-meta">
+                  {{ sa.activity.category }} · {{ sa.activity.duration_hours }}h
+                  {% if sa.scheduled_time %} · 🕐 {{ sa.scheduled_time }}{% endif %}
+                </div>
+              </div>
+              <div class="activity-cost">₹{{ '%.0f'|format(sa.activity.cost) }}</div>
+            </div>
+            {% endfor %}
+            <div style="text-align:right;margin-top:.75rem;font-size:.85rem;color:var(--text-muted)">
+              Total: <strong style="color:var(--accent)">₹{{ '%.0f'|format(stop.stop_activities|sum(attribute='activity.cost')) }}</strong>
+            </div>
+          {% else %}
+            <p style="color:var(--text-faint);text-align:center;padding:1rem">No activities planned for this stop</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🗺️</div>
+    <h3>Itinerary is empty</h3>
+    <p>Add stops to your trip using the builder.</p>
+    <a href="{{ url_for('trips.builder', trip_id=trip.id) }}" class="btn btn-primary" style="margin-top:1rem">Open Builder</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
