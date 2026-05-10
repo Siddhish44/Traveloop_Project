@@ -1,1 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>My Trips</h1>
+      <p>All your planned adventures in one place</p>
+    </div>
+    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary" id="my-trips-new">+ New Trip</a>
+  </div>
 
+  {% if trips %}
+  <div class="grid-auto">
+    {% for trip in trips %}
+    <div class="trip-card" id="trip-card-{{ trip.id }}">
+      <div class="trip-card-img">
+        {% if trip.cover_photo and trip.cover_photo != 'default_trip.jpg' %}
+          <img src="{{ url_for('static', filename='uploads/' + trip.cover_photo) }}" alt="{{ trip.name }}"/>
+        {% else %}
+          {% set emojis = ['🌍','🏝️','🗺️','🌋','🏙️','🌅'] %}
+          {{ emojis[loop.index0 % emojis|length] }}
+        {% endif %}
+        {% if trip.is_public %}<span class="badge badge-success" style="position:absolute;top:.75rem;right:.75rem">🔓 Public</span>{% endif %}
+      </div>
+      <div class="trip-card-body">
+        <div class="trip-card-title">{{ trip.name }}</div>
+        <div class="trip-card-meta">
+          {% if trip.start_date %}
+            📅 {{ trip.start_date.strftime('%b %d') }}{% if trip.end_date %} – {{ trip.end_date.strftime('%b %d, %Y') }}{% endif %}
+            · {{ trip.duration_days }} days
+          {% endif %}
+          <br>📍 {{ trip.destination_count }} stop{{ 's' if trip.destination_count != 1 }}
+          {% if trip.budget and trip.budget.total_spent > 0 %}
+            · 💰 ₹{{ '%.0f'|format(trip.budget.total_spent) }}
+          {% endif %}
+        </div>
+        <div class="trip-card-actions">
+          <a href="{{ url_for('trips.view', trip_id=trip.id) }}" class="btn btn-primary btn-sm">👁 View</a>
+          <a href="{{ url_for('trips.builder', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">✏️ Edit</a>
+          <a href="{{ url_for('trips.budget', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">💰</a>
+          <form method="POST" action="{{ url_for('trips.delete_trip', trip_id=trip.id) }}" style="display:inline" data-confirm="Delete '{{ trip.name }}'? This cannot be undone.">
+            {{ csrf_token_input() }}
+            <button type="submit" class="btn btn-danger btn-sm" id="delete-trip-{{ trip.id }}">🗑</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🧳</div>
+    <h3>No trips yet!</h3>
+    <p>Start by creating your first personalized trip.</p>
+    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary" style="margin-top:1rem">+ Create First Trip</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
