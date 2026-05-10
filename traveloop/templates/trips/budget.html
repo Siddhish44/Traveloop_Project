@@ -1,1 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>Trip Budget</h1>
+      <p>{{ trip.name }} &middot; Track your expenses</p>
+    </div>
+    <a href="{{ url_for('trips.builder', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">Back to Builder</a>
+  </div>
 
+  {% if budget and budget.total_spent > 0 %}
+  <div class="stats-grid" style="margin-bottom:2rem">
+    <div class="stat-card">
+      <div class="stat-icon">💸</div>
+      <div class="stat-label">Total Spent</div>
+      <div class="stat-value text-accent">₹{{ '%.0f'|format(budget.total_spent) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-label">Budget Limit</div>
+      <div class="stat-value">{% if budget.total_limit > 0 %}₹{{ '%.0f'|format(budget.total_limit) }}{% else %}—{% endif %}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-label">Remaining</div>
+      <div class="stat-value text-{{ 'danger' if budget.over_budget else 'accent2' }}">
+        {% if budget.total_limit > 0 %}₹{{ '%.0f'|format(budget.remaining) }}{% else %}—{% endif %}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-label">Status</div>
+      <div style="margin-top:.25rem">
+        {% if budget.total_limit > 0 %}
+          {% if budget.over_budget %}
+            <span class="badge badge-danger">Over Budget</span>
+          {% else %}
+            <span class="badge badge-success">On Track</span>
+          {% endif %}
+        {% else %}
+          <span class="badge badge-primary">No Limit Set</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if budget.total_limit > 0 %}
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;margin-bottom:.5rem;font-size:.85rem;color:var(--text-muted)">
+        <span>Budget used</span>
+        <span>{{ '%.0f'|format([budget.total_spent / budget.total_limit * 100, 100]|min) }}%</span>
+      </div>
+      <div class="progress">
+        <div class="progress-bar {{ 'danger' if budget.over_budget }}" style="width:{{ '%.1f'|format([budget.total_spent / budget.total_limit * 100, 100]|min) }}%"></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="grid-2" style="margin-bottom:2rem;align-items:start">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Breakdown by Category</div></div>
+      <div class="card-body">
+        <div class="chart-container"><canvas id="budgetPie"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Category Comparison</div></div>
+      <div class="card-body">
+        <div class="chart-container"><canvas id="budgetBar"></canvas></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">Edit Budget</div></div>
+    <div class="card-body">
+      <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Transport (₹)</label>
+            {{ form.transport_budget(class="form-control", id="budget-transport") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Accommodation (₹)</label>
+            {{ form.stay_budget(class="form-control", id="budget-stay") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Activities (₹)</label>
+            {{ form.activities_budget(class="form-control", id="budget-activities") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Meals (₹)</label>
+            {{ form.meals_budget(class="form-control", id="budget-meals") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Miscellaneous (₹)</label>
+            {{ form.misc_budget(class="form-control", id="budget-misc") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Budget Limit (₹)</label>
+            {{ form.total_limit(class="form-control", id="budget-limit") }}
+          </div>
+        </div>
+        <div style="margin-top:.5rem">
+          {{ form.submit(class="btn btn-primary", id="budget-submit") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if budget and budget.total_spent > 0 %}
+<script>
+initBudgetCharts({
+  transport: {{ budget.transport_budget | float }},
+  stay: {{ budget.stay_budget | float }},
+  activities: {{ budget.activities_budget | float }},
+  meals: {{ budget.meals_budget | float }},
+  misc: {{ budget.misc_budget | float }}
+});
+</script>
+{% endif %}
+{% endblock %}
