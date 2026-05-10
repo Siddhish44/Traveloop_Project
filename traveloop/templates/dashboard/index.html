@@ -1,1 +1,154 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>Welcome back, {{ current_user.name.split()[0] }} 👋</h1>
+      <p>Here's your travel overview</p>
+    </div>
+    <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary" id="dashboard-new-trip">+ Plan New Trip</a>
+  </div>
 
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">✈️</div>
+      <div class="stat-label">Total Trips</div>
+      <div class="stat-value">{{ total_trips }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏙️</div>
+      <div class="stat-label">Cities Planned</div>
+      <div class="stat-value">{{ recent_trips | sum(attribute='destination_count') }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-label">Total Budgeted</div>
+      <div class="stat-value">₹{{ '%.0f'|format(total_budget) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🌍</div>
+      <div class="stat-label">Explore Cities</div>
+      <div class="stat-value"><a href="{{ url_for('search.cities') }}" style="-webkit-text-fill-color:var(--primary-light)">Browse</a></div>
+    </div>
+  </div>
+
+  {% if recent_trips %}
+  <div class="section-title">🗺️ Recent Trips <span>{{ recent_trips|length }} trips</span></div>
+  <div class="grid-auto" style="margin-bottom:2rem">
+    {% for trip in recent_trips %}
+    <div class="trip-card">
+      <div class="trip-card-img">
+        {% if trip.cover_photo and trip.cover_photo != 'default_trip.jpg' %}
+          <img src="{{ url_for('static', filename='uploads/' + trip.cover_photo) }}" alt="{{ trip.name }}"/>
+        {% else %}
+          🌍
+        {% endif %}
+        {% if trip.is_public %}<span class="badge badge-success" style="position:absolute;top:.75rem;right:.75rem">Public</span>{% endif %}
+      </div>
+      <div class="trip-card-body">
+        <div class="trip-card-title">{{ trip.name }}</div>
+        <div class="trip-card-meta">
+          {% if trip.start_date %}📅 {{ trip.start_date.strftime('%b %d') }}{% if trip.end_date %} – {{ trip.end_date.strftime('%b %d, %Y') }}{% endif %}{% endif %}
+          <span>📍 {{ trip.destination_count }} stop{{ 's' if trip.destination_count != 1 }}</span>
+        </div>
+        <div class="trip-card-actions">
+          <a href="{{ url_for('trips.view', trip_id=trip.id) }}" class="btn btn-primary btn-sm">View</a>
+          <a href="{{ url_for('trips.builder', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="margin-bottom:2rem">
+    <div class="empty-state">
+      <div class="empty-icon">🧳</div>
+      <h3>No trips yet</h3>
+      <p>Start planning your first adventure!</p>
+      <a href="{{ url_for('trips.create_trip') }}" class="btn btn-primary" style="margin-top:1rem">Create Your First Trip</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="section-title">🌟 Popular Destinations</div>
+  {% set city_img_map = {
+    'Paris':         'cities/paris.jpg',
+    'Tokyo':         'cities/tokyo.jpg',
+    'New York':      'cities/new_york.jpg',
+    'Bali':          'cities/bali.jpg',
+    'Rome':          'cities/rome.jpg',
+    'Bangkok':       'cities/bangkok.jpg',
+    'Barcelona':     'cities/barcelona.jpg',
+    'Cape Town':     'cities/cape_town.jpg',
+    'Dubai':         'cities/dubai.jpg',
+    'Sydney':        'cities/sydney.jpg',
+    'Santorini':     'cities/santorini.jpg',
+    'Kyoto':         'cities/kyoto.jpg',
+    'Marrakech':     'cities/marrakech.jpg',
+    'Prague':        'cities/prague.jpg',
+    'Rio de Janeiro':'cities/rio.jpg',
+    'Amsterdam':     'cities/amsterdam.jpg',
+    'Singapore':     'cities/singapore.jpg',
+    'Istanbul':      'cities/istanbul.jpg',
+    'Lisbon':        'cities/lisbon.jpg',
+    'Mexico City':   'cities/mexico_city.jpg',
+    'Agra':          'cities/agra.jpg',
+    'Jaipur':        'cities/jaipur.jpg',
+    'Varanasi':      'cities/varanasi.jpg',
+    'Delhi':         'cities/delhi.jpg',
+    'Mumbai':        'cities/mumbai.jpg',
+    'Udaipur':       'cities/udaipur.jpg',
+    'Goa':           'cities/goa.jpg',
+    'Kerala Backwaters': 'cities/kerala_backwaters.jpg',
+    'Rishikesh':     'cities/rishikesh.jpg',
+    'Leh-Ladakh':    'cities/leh-ladakh.jpg',
+    'Hampi':         'cities/hampi.jpg',
+    'Mysore':        'cities/mysore.jpg',
+    'Darjeeling':    'cities/darjeeling.jpg',
+    'Amritsar':      'cities/amritsar.jpg',
+    'Jodhpur':       'cities/jodhpur.jpg',
+    'Khajuraho':     'cities/khajuraho.jpg',
+    'Jaisalmer':     'cities/jaisalmer.jpg',
+    'Pondicherry':   'cities/pondicherry.jpg',
+    'Shimla':        'cities/shimla.jpg',
+    'Kolkata':       'cities/kolkata.jpg',
+    'Hyderabad':     'cities/hyderabad.jpg',
+    'Chennai':       'cities/chennai.jpg',
+    'Ranthambore':   'cities/ranthambore.jpg',
+    'Andaman Islands': 'cities/andaman_islands.jpg',
+    'Munnar':        'cities/munnar.jpg',
+    'Pushkar':       'cities/pushkar.jpg',
+    'Ooty':          'cities/ooty.jpg',
+    'Kaziranga':     'cities/kaziranga.jpg',
+    'Manali':        'cities/manali.jpg',
+    'Bangalore':     'cities/bangalore.jpg',
+    'Ajanta & Ellora': 'cities/ajanta_and_ellora.jpg'
+  } %}
+  <div class="grid-auto-sm" style="margin-bottom:3rem">
+    {% for city in popular_cities %}
+    {% set city_img = city_img_map.get(city.name) %}
+    {% set emojis = ['🗼','🗽','🏯','🎡','🏖️','🏔️','🌇','🌉'] %}
+    <div class="city-card">
+      <div class="city-card-img" {% if not city_img %}style="background:linear-gradient(135deg,hsl({{ loop.index * 37 % 360 }},40%,20%),hsl({{ (loop.index * 37 + 60) % 360 }},40%,15%))"{% endif %}>
+        {% if city_img %}
+          <img src="{{ url_for('static', filename=city_img) }}" alt="{{ city.name }}" loading="lazy"/>
+        {% else %}
+          {{ emojis[loop.index0 % emojis|length] }}
+        {% endif %}
+      </div>
+      <div class="city-card-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
+          <div class="city-card-name">{{ city.name }}</div>
+          {% set ci = city.cost_index %}
+          <span class="cost-badge {{ 'cost-low' if ci <= 2 else ('cost-mid' if ci <= 3.5 else 'cost-high') }}">
+            Price level: {{ ci|round(1) }}/5 · {{ city.cost_label }}
+          </span>
+        </div>
+        <div class="city-card-country">{{ city.country }} · {{ city.region }}</div>
+        <div style="margin-top:.75rem;font-size:.8rem;color:var(--text-muted)">⭐ {{ city.popularity_score }}/100</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

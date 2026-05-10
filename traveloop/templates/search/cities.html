@@ -1,1 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>🔍 Explore Cities</h1>
+      <p>Discover your next destination</p>
+    </div>
+    <a href="{{ url_for('search.activities') }}" class="btn btn-secondary btn-sm">🎯 Browse Activities</a>
+  </div>
 
+  <!-- Search & Filter -->
+  <form method="GET" action="{{ url_for('search.cities') }}" style="margin-bottom:1.5rem">
+    <div class="filter-bar">
+      <div class="search-bar" style="flex:1;min-width:240px">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search cities or countries..." id="city-search-input"/>
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+      </div>
+      <select name="country" class="form-control" style="width:180px">
+        <option value="">All Countries</option>
+        {% for c in countries %}
+        <option value="{{ c }}" {{ 'selected' if c == selected_country }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <select name="region" class="form-control" style="width:160px">
+        <option value="">All Regions</option>
+        {% for r in regions %}
+        <option value="{{ r }}" {{ 'selected' if r == selected_region }}>{{ r }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  {# Map city names to downloaded image filenames #}
+  {% set city_img_map = {
+    'Paris':         'cities/paris.jpg',
+    'Tokyo':         'cities/tokyo.jpg',
+    'New York':      'cities/new_york.jpg',
+    'Bali':          'cities/bali.jpg',
+    'Rome':          'cities/rome.jpg',
+    'Bangkok':       'cities/bangkok.jpg',
+    'Barcelona':     'cities/barcelona.jpg',
+    'Cape Town':     'cities/cape_town.jpg',
+    'Dubai':         'cities/dubai.jpg',
+    'Sydney':        'cities/sydney.jpg',
+    'Santorini':     'cities/santorini.jpg',
+    'Kyoto':         'cities/kyoto.jpg',
+    'Marrakech':     'cities/marrakech.jpg',
+    'Prague':        'cities/prague.jpg',
+    'Rio de Janeiro':'cities/rio.jpg',
+    'Amsterdam':     'cities/amsterdam.jpg',
+    'Singapore':     'cities/singapore.jpg',
+    'Istanbul':      'cities/istanbul.jpg',
+    'Lisbon':        'cities/lisbon.jpg',
+    'Mexico City':   'cities/mexico_city.jpg',
+    'Agra':          'cities/agra.jpg',
+    'Jaipur':        'cities/jaipur.jpg',
+    'Varanasi':      'cities/varanasi.jpg',
+    'Delhi':         'cities/delhi.jpg',
+    'Mumbai':        'cities/mumbai.jpg',
+    'Udaipur':       'cities/udaipur.jpg',
+    'Goa':           'cities/goa.jpg',
+    'Kerala Backwaters': 'cities/kerala_backwaters.jpg',
+    'Rishikesh':     'cities/rishikesh.jpg',
+    'Leh-Ladakh':    'cities/leh-ladakh.jpg',
+    'Hampi':         'cities/hampi.jpg',
+    'Mysore':        'cities/mysore.jpg',
+    'Darjeeling':    'cities/darjeeling.jpg',
+    'Amritsar':      'cities/amritsar.jpg',
+    'Jodhpur':       'cities/jodhpur.jpg',
+    'Khajuraho':     'cities/khajuraho.jpg',
+    'Jaisalmer':     'cities/jaisalmer.jpg',
+    'Pondicherry':   'cities/pondicherry.jpg',
+    'Shimla':        'cities/shimla.jpg',
+    'Kolkata':       'cities/kolkata.jpg',
+    'Hyderabad':     'cities/hyderabad.jpg',
+    'Chennai':       'cities/chennai.jpg',
+    'Ranthambore':   'cities/ranthambore.jpg',
+    'Andaman Islands': 'cities/andaman_islands.jpg',
+    'Munnar':        'cities/munnar.jpg',
+    'Pushkar':       'cities/pushkar.jpg',
+    'Ooty':          'cities/ooty.jpg',
+    'Kaziranga':     'cities/kaziranga.jpg',
+    'Manali':        'cities/manali.jpg',
+    'Bangalore':     'cities/bangalore.jpg',
+    'Ajanta & Ellora': 'cities/ajanta_and_ellora.jpg'
+  } %}
+  {% if cities %}
+  <div class="grid-auto">
+    {% set emojis = ['\U0001f5fc','\U0001f5fd','\U0001f3ef','\U0001f3a1','\U0001f3d6\ufe0f','\U0001f3d4\ufe0f','\U0001f307','\U0001f309','\U0001f54c','\U0001f3db\ufe0f','\U0001f33a','\U0001f3d5\ufe0f'] %}
+    {% for city in cities %}
+    {% set city_img = city_img_map.get(city.name) %}
+    <div class="city-card">
+      <div class="city-card-img" {% if not city_img %}style="background:linear-gradient(135deg,hsl({{ loop.index * 37 % 360 }},40%,20%),hsl({{ (loop.index * 37 + 60) % 360 }},40%,15%))"{% endif %}>
+        {% if city_img %}
+          <img src="{{ url_for('static', filename=city_img) }}" alt="{{ city.name }}" loading="lazy"/>
+        {% else %}
+          {{ emojis[loop.index0 % emojis|length] }}
+        {% endif %}
+      </div>
+      <div class="city-card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem">
+          <div>
+            <div class="city-card-name">{{ city.name }}</div>
+            <div class="city-card-country">{{ city.country }} · {{ city.region }}</div>
+          </div>
+          {% set ci = city.cost_index %}
+          <span class="cost-badge {{ 'cost-low' if ci <= 2 else ('cost-mid' if ci <= 3.5 else 'cost-high') }}">
+            Price level: {{ ci|round(1) }}/5 · {{ city.cost_label }}
+          </span>
+        </div>
+        {% if city.description %}
+        <p style="font-size:.8rem;color:var(--text-muted);line-height:1.5;margin-bottom:.75rem">{{ city.description[:100] }}...</p>
+        {% endif %}
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--text-muted)">
+          <span>⭐ {{ city.popularity_score }}/100</span>
+          <span>🎯 {{ city.activities|length }} activities</span>
+        </div>
+        <a href="{{ url_for('search.activities') }}?city_id={{ city.id }}" class="btn btn-secondary btn-sm" style="margin-top:.75rem;width:100%;justify-content:center">Explore Activities</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🌍</div>
+    <h3>No cities found</h3>
+    <p>Try different search terms or filters.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

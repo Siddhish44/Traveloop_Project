@@ -1,1 +1,39 @@
-
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h1>✈ Traveloop</h1>
+      <p>Create your free account</p>
+    </div>
+    <form method="POST" action="{{ url_for('auth.signup') }}" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        {{ form.name(class="form-control", placeholder="Your name", id="signup-name") }}
+        {% for e in form.name.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        {{ form.email(class="form-control", placeholder="you@example.com", id="signup-email") }}
+        {% for e in form.email.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        {{ form.password(class="form-control", placeholder="At least 6 characters", id="signup-password") }}
+        {% for e in form.password.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        {{ form.confirm_password(class="form-control", placeholder="Repeat password", id="signup-confirm") }}
+        {% for e in form.confirm_password.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.8rem" id="signup-submit">Create Account →</button>
+    </form>
+    <div class="auth-divider">already have an account?</div>
+    <p style="text-align:center;font-size:.88rem;color:var(--text-muted)">
+      <a href="{{ url_for('auth.login') }}"><strong>Sign in instead</strong></a>
+    </p>
+  </div>
+</div>
+{% endblock %}

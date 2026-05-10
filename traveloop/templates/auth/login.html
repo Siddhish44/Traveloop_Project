@@ -1,1 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h1>✈ Traveloop</h1>
+      <p>Sign in to plan your next adventure</p>
+    </div>
+    <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        {{ form.email(class="form-control", placeholder="you@example.com", id="login-email") }}
+        {% for e in form.email.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        {{ form.password(class="form-control", placeholder="••••••••", id="login-password") }}
+        {% for e in form.password.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="form-group" style="display:flex;justify-content:space-between;align-items:center">
+        <label class="form-check">
+          {{ form.remember_me(class="form-check-input") }} Remember me
+        </label>
+        <a href="#" style="font-size:.85rem">Forgot password?</a>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.8rem" id="login-submit">Sign In →</button>
+    </form>
+    <div class="auth-divider">or</div>
+    <form method="POST" action="{{ url_for('auth.demo_login') }}">
+      {{ form.csrf_token }}
+      <button type="submit" class="btn btn-secondary" style="width:100%;justify-content:center;padding:.8rem">Continue as Guest</button>
+    </form>
+    <p style="text-align:center;font-size:.88rem;color:var(--text-muted);margin-top:1.5rem">
+      Don't have an account? <a href="{{ url_for('auth.signup') }}"><strong>Create one</strong></a>
+    </p>
+    <p style="text-align:center;font-size:.8rem;color:var(--text-faint);margin-top:1rem">
+      Demo: demo@traveloop.com / demo1234
+    </p>
+  </div>
+</div>
+{% endblock %}
 

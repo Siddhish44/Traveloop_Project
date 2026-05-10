@@ -1,1 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>🎯 Explore Activities</h1>
+      <p>Find things to do at every stop</p>
+    </div>
+    <a href="{{ url_for('search.cities') }}" class="btn btn-secondary btn-sm">🌍 Browse Cities</a>
+  </div>
 
+  <form method="GET" action="{{ url_for('search.activities') }}" style="margin-bottom:1.5rem">
+    <div class="filter-bar">
+      <div class="search-bar" style="flex:1;min-width:200px">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search activities..." id="activity-search-input"/>
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+      </div>
+      <select name="category" class="form-control" style="width:160px">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+        <option value="{{ cat }}" {{ 'selected' if cat == selected_category }}>{{ cat|title }}</option>
+        {% endfor %}
+      </select>
+      <select name="city_id" class="form-control" style="width:180px">
+        <option value="">All Cities</option>
+        {% for city in cities %}
+        <option value="{{ city.id }}" {{ 'selected' if city.id == selected_city_id }}>{{ city.name }}</option>
+        {% endfor %}
+      </select>
+      <input type="number" name="max_cost" class="form-control" style="width:130px" placeholder="Max cost ₹" value="{{ max_cost or '' }}">
+    </div>
+  </form>
+
+  {% set cat_icons = {'sightseeing':'🏛️','food':'🍜','adventure':'🧗','culture':'🎭','shopping':'🛍️','nature':'🌿','nightlife':'🎵'} %}
+  {% if activities %}
+  <div class="grid-auto">
+    {% for act in activities %}
+    <div class="card">
+      <div class="card-body">
+        <div class="activity-item" style="margin-bottom:0;border:none;background:none;padding:0">
+          <div class="activity-icon" style="width:48px;height:48px;font-size:1.4rem">{{ cat_icons.get(act.category,'⭐') }}</div>
+          <div class="activity-info">
+            <div class="activity-name">{{ act.name }}</div>
+            <div class="activity-meta">{{ act.city.name }} · {{ act.category|title }} · {{ act.duration_hours }}h · ⭐ {{ act.rating }}</div>
+          </div>
+          <div class="activity-cost">₹{{ '%.0f'|format(act.cost) }}</div>
+        </div>
+        {% if act.description %}
+        <p style="font-size:.82rem;color:var(--text-muted);margin-top:.75rem;line-height:1.5">{{ act.description[:120] }}...</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🎯</div>
+    <h3>No activities found</h3>
+    <p>Adjust filters or search terms.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
