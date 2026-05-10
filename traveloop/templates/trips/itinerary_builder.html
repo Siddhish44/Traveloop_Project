@@ -1,1 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>🏗️ Itinerary Builder</h1>
+      <p>{{ trip.name }} · Build your day-by-day plan</p>
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <a href="{{ url_for('trips.view', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">👁 Preview</a>
+      <a href="{{ url_for('trips.budget', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">💰 Budget</a>
+      <a href="{{ url_for('trips.packing', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">🧳 Packing</a>
+      <a href="{{ url_for('trips.notes', trip_id=trip.id) }}" class="btn btn-secondary btn-sm">📝 Notes</a>
+    </div>
+  </div>
 
+  <div class="grid-2" style="align-items:start;gap:2rem">
+    <!-- Add Stop -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">➕ Add a Stop</div></div>
+      <div class="card-body">
+        <form method="POST" novalidate>
+          {{ stop_form.hidden_tag() }}
+          <div class="form-group">
+            <label class="form-label">City</label>
+            {{ stop_form.city_id(class="form-control", id="stop-city") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Arrival Date</label>
+            {{ stop_form.arrival_date(class="form-control", id="stop-arrival") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Departure Date</label>
+            {{ stop_form.departure_date(class="form-control", id="stop-departure") }}
+          </div>
+          {{ stop_form.submit(class="btn btn-primary", id="stop-submit") }}
+        </form>
+      </div>
+    </div>
+
+    <!-- Stops List -->
+    <div>
+      <div class="section-title">📍 Your Stops <span>{{ stops|length }} added</span></div>
+      {% if stops %}
+      <div id="stops-list" data-trip-id="{{ trip.id }}">
+        {% for stop in stops %}
+        <div class="stop-card" data-stop-id="{{ stop.id }}" style="margin-bottom:1rem">
+          <div class="stop-header">
+            <div>
+              <div class="stop-city">{{ stop.city.name }}, {{ stop.city.country }}</div>
+              <div class="stop-dates">
+                {% if stop.arrival_date %}{{ stop.arrival_date.strftime('%b %d') }}{% endif %}
+                {% if stop.departure_date %} – {{ stop.departure_date.strftime('%b %d') }}{% endif %}
+                · {{ stop.duration_days }} day{{ 's' if stop.duration_days != 1 }}
+              </div>
+            </div>
+            <form method="POST" action="{{ url_for('trips.delete_stop', trip_id=trip.id, stop_id=stop.id) }}" style="display:inline">
+              {{ stop_form.hidden_tag() }}
+              <button type="submit" class="btn btn-danger btn-sm" data-confirm="Remove this stop?">✕</button>
+            </form>
+          </div>
+          <div class="stop-body">
+            <!-- Activities on this stop -->
+            {% if stop.stop_activities %}
+              {% for sa in stop.stop_activities %}
+              <div class="activity-item">
+                <div class="activity-icon">
+                  {% set icons = {'sightseeing':'🏛️','food':'🍜','adventure':'🧗','culture':'🎭','shopping':'🛍️','nature':'🌿','nightlife':'🎵'} %}
+                  {{ icons.get(sa.activity.category, '⭐') }}
+                </div>
+                <div class="activity-info">
+                  <div class="activity-name">{{ sa.activity.name }}</div>
+                  <div class="activity-meta">{{ sa.activity.category }} · {{ sa.activity.duration_hours }}h</div>
+                </div>
+                <div class="activity-cost">₹{{ '%.0f'|format(sa.activity.cost) }}</div>
+                <form method="POST" action="{{ url_for('trips.remove_activity_from_stop', trip_id=trip.id, stop_id=stop.id, sa_id=sa.id) }}">
+                  {{ stop_form.hidden_tag() }}
+                  <button type="submit" class="btn btn-danger btn-sm btn-icon">✕</button>
+                </form>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="color:var(--text-faint);font-size:.85rem;text-align:center;padding:1rem 0">No activities yet</p>
+            {% endif %}
+
+            <!-- Add activity to this stop -->
+            <details style="margin-top:.75rem">
+              <summary style="cursor:pointer;font-size:.85rem;color:var(--primary-light);font-weight:600">+ Add Activity</summary>
+              <form method="POST" action="{{ url_for('trips.add_activity_to_stop', trip_id=trip.id, stop_id=stop.id) }}" style="margin-top:.75rem">
+                {{ stop_form.hidden_tag() }}
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                  <select name="activity_id" class="form-control" style="flex:1">
+                    {% for act in stop.city.activities %}
+                    <option value="{{ act.id }}">{{ act.name }} (₹{{ '%.0f'|format(act.cost) }})</option>
+                    {% endfor %}
+                  </select>
+                  <input type="time" name="scheduled_time" class="form-control" style="width:120px" placeholder="Time">
+                  <button type="submit" class="btn btn-success btn-sm">Add</button>
+                </div>
+              </form>
+            </details>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem">
+        <div class="empty-icon">📍</div>
+        <h3>No stops yet</h3>
+        <p>Add your first city to start building!</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
