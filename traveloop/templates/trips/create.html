@@ -1,1 +1,49 @@
-
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="max-width:680px">
+  <div class="page-header">
+    <h1>{{ '✏️ Edit Trip' if trip is defined else '🗺️ Create New Trip' }}</h1>
+    <p>{{ 'Update your trip details' if trip is defined else 'Fill in the details to start planning' }}</p>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+          <label class="form-label">Trip Name *</label>
+          {{ form.name(class="form-control", placeholder="e.g. Europe Summer 2025", id="trip-name") }}
+          {% for e in form.name.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          {{ form.description(class="form-control", placeholder="What's this trip about?", id="trip-desc") }}
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            {{ form.start_date(class="form-control", id="trip-start") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date</label>
+            {{ form.end_date(class="form-control", id="trip-end") }}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cover Photo</label>
+          {{ form.cover_photo(class="form-control", id="trip-photo") }}
+        </div>
+        <div class="form-group">
+          <label class="form-check">
+            {{ form.is_public(class="form-check-input", id="trip-public") }}
+            Make this trip public (shareable link)
+          </label>
+        </div>
+        <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+          {{ form.submit(class="btn btn-primary", id="trip-submit") }}
+          <a href="{{ url_for('trips.list_trips') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
