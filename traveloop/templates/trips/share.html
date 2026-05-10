@@ -1,1 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="max-width:860px">
+  <div class="share-hero" style="margin-bottom:2rem">
+    <div class="share-hero-overlay"></div>
+    <div class="share-hero-content">
+      <span class="badge badge-success" style="margin-bottom:.75rem">🔓 Public Itinerary</span>
+      <h1 style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:#fff">{{ trip.name }}</h1>
+      <p style="color:rgba(255,255,255,.7);margin-top:.4rem">
+        {% if trip.start_date %}📅 {{ trip.start_date.strftime('%B %d') }}{% if trip.end_date %} – {{ trip.end_date.strftime('%B %d, %Y') }}{% endif %}{% endif %}
+        · {{ stops|length }} stop{{ 's' if stops|length != 1 }}
+      </p>
+    </div>
+  </div>
 
+  <div style="display:flex;gap:.75rem;margin-bottom:2rem;flex-wrap:wrap">
+    <button onclick="navigator.clipboard.writeText(window.location.href)" class="btn btn-primary" id="share-copy-link">🔗 Copy Link</button>
+    <a href="https://twitter.com/intent/tweet?text=Check+out+my+trip+{{ trip.name|urlencode }}&url={{ request.url|urlencode }}" target="_blank" class="btn btn-secondary">🐦 Share on X</a>
+    <a href="{{ url_for('auth.signup') }}" class="btn btn-secondary">✈️ Plan My Own Trip</a>
+  </div>
+
+  {% if trip.description %}
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-body"><p style="color:var(--text-muted)">{{ trip.description }}</p></div>
+  </div>
+  {% endif %}
+
+  <div class="timeline">
+    {% for stop in stops %}
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="card">
+        <div class="stop-header">
+          <div>
+            <div class="stop-city">📍 {{ stop.city.name }}, {{ stop.city.country }}</div>
+            <div class="stop-dates">
+              {% if stop.arrival_date %}{{ stop.arrival_date.strftime('%B %d') }}{% endif %}
+              {% if stop.departure_date %} – {{ stop.departure_date.strftime('%B %d, %Y') }}{% endif %}
+            </div>
+          </div>
+          <span class="badge badge-primary">Stop {{ loop.index }}</span>
+        </div>
+        <div class="stop-body">
+          {% set icons = {'sightseeing':'🏛️','food':'🍜','adventure':'🧗','culture':'🎭','shopping':'🛍️','nature':'🌿','nightlife':'🎵'} %}
+          {% for sa in stop.stop_activities %}
+          <div class="activity-item">
+            <div class="activity-icon">{{ icons.get(sa.activity.category, '⭐') }}</div>
+            <div class="activity-info">
+              <div class="activity-name">{{ sa.activity.name }}</div>
+              <div class="activity-meta">{{ sa.activity.category }} · {{ sa.activity.duration_hours }}h</div>
+            </div>
+            <div class="activity-cost">₹{{ '%.0f'|format(sa.activity.cost) }}</div>
+          </div>
+          {% else %}
+          <p style="color:var(--text-faint);font-size:.85rem">No activities listed.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
